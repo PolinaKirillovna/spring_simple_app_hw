@@ -26,11 +26,11 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public User validateUser(Login login) {
-        String sql = "select * from users where username='" + login.getUsername() + "' and password='" + login.getPassword()
-                + "'";
-        List<User> users = jdbcTemplate.query(sql, new UserMapper());
+        String sql = "select * from users where username=? and password=?";
+        List<User> users = jdbcTemplate.query(sql, new Object[]{login.getUsername(), login.getPassword()}, new UserMapper());
         return users.size() > 0 ? users.get(0) : null;
     }
+
 
     @Override
     public ArrayList<User> getAllUsers() {
@@ -41,11 +41,12 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public int changePassword(String username, String oldPassword, String newPassword) {
-        String sql = "update users set password=? where username=?";
-        String sql_old = "update users set old_password=? where username=?";
-        jdbcTemplate.update(sql_old, new Object[]{oldPassword, username});
-        return jdbcTemplate.update(sql, new Object[]{newPassword, username});
+        String sqlUpdateOldPassword = "update users set old_password=? where username=?";
+        jdbcTemplate.update(sqlUpdateOldPassword, oldPassword, username);
+        String sqlUpdatePassword = "update users set password=? where username=?";
+        return jdbcTemplate.update(sqlUpdatePassword, newPassword, username);
     }
+
     @Override
     public User getUserByUsername(String username) {
         String sql = "select * from users where username='" + username + "'";

@@ -33,9 +33,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public int changePassword(String username, String newPassword, String oldPassword) {
+    public int changePassword(String username, String oldPassword, String newPassword) {
         User user = userDao.getUserByUsername(username);
-        if(user == null || user.getPassword().equals(oldPassword)) {
+        if(user == null || user.getPassword().equals(newPassword)) {
             throw new CustomException("Old password matches new password, please choose another one", HttpStatus.BAD_REQUEST);
         }
         return userDao.changePassword(username, oldPassword, newPassword);
