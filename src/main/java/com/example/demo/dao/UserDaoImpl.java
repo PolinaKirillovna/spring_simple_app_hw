@@ -1,54 +1,71 @@
-package com.example.dao;
+package com.example.demo.dao;
 
-import com.example.model.Login;
-import com.example.model.User;
+import com.example.demo.model.Login;
+import com.example.demo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
-import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
-public class UserDaoImpl implements UserDao {
 
-    @Autowired
-    DataSource datasource;
+@Repository
+public class UserDaoImpl implements UserDao {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Override
     public int register(User user) {
-        String sql = "insert into users values(?,?,?,?,?,?,?)";
-
-        return jdbcTemplate.update(sql, new Object[] { user.getUsername(), user.getPassword(), user.getFirstname(),
-                user.getLastname(), user.getEmail(), user.getAddress(), user.getPhone() });
+        String sql = "insert into users values(?,?,?,?)";
+        return jdbcTemplate.update(sql, new Object[]{user.getId(), user.getUsername(), user.getPassword(), user.getEmail()});
     }
 
+    @Override
     public User validateUser(Login login) {
         String sql = "select * from users where username='" + login.getUsername() + "' and password='" + login.getPassword()
                 + "'";
         List<User> users = jdbcTemplate.query(sql, new UserMapper());
-
         return users.size() > 0 ? users.get(0) : null;
     }
+
+    @Override
+    public ArrayList<User> getAllUsers() {
+        String sql = "select * from users";
+        List<User> users = jdbcTemplate.query(sql, new UserMapper());
+        return (ArrayList<User>) users;
+    }
+
+    @Override
+    public int changePassword(String username, String oldPassword, String newPassword) {
+        String sql = "update users set password=? where username=?";
+        String sql_old = "update users set old_password=? where username=?";
+        jdbcTemplate.update(sql_old, new Object[]{oldPassword, username});
+        return jdbcTemplate.update(sql, new Object[]{newPassword, username});
+    }
+    @Override
+    public User getUserByUsername(String username) {
+        String sql = "select * from users where username='" + username + "'";
+        List<User> users = jdbcTemplate.query(sql, new UserMapper());
+        return users.size() > 0 ? users.get(0) : null;
+    }
+
 
 }
 
 class UserMapper implements RowMapper<User> {
-
     public User mapRow(ResultSet rs, int arg1) throws SQLException {
         User user = new User();
-
+        user.setId(rs.getDouble("id"));
         user.setUsername(rs.getString("username"));
         user.setPassword(rs.getString("password"));
-        user.setFirstname(rs.getString("firstname"));
-        user.setLastname(rs.getString("lastname"));
         user.setEmail(rs.getString("email"));
-        user.setAddress(rs.getString("address"));
-        user.setPhone(rs.getInt("phone"));
-
+        user.setOldPassword(rs.getString("old_password"));
         return user;
     }
 }
+
+
