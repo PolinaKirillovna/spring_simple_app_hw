@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Login;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -10,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.util.List;
 
 @Controller
 public class LoginController {
@@ -23,10 +22,10 @@ public class LoginController {
     public ModelAndView showLogin() {
         ModelAndView mav = new ModelAndView("login");
         mav.addObject("login", new Login());
-
         return mav;
     }
 
+    @SneakyThrows
     @RequestMapping(value = "/loginProcess", method = RequestMethod.POST)
     public ModelAndView loginProcess(
             @ModelAttribute("login") Login login) {
@@ -48,11 +47,12 @@ public class LoginController {
     @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
     public ModelAndView changePassword(
             @RequestParam("username") String username,
-            @RequestParam("newPassword") String newPassword) {
+            @RequestParam("newPassword") String newPassword) throws Exception {
         ModelAndView mav = null;
 
-        int result = userService.changePassword(username, newPassword);
+        User user = userService.getUser(username);
 
+        int result = userService.changePassword(username, user.getPassword() ,newPassword);
         if (result == 1) {
             mav = new ModelAndView("welcome");
             mav.addObject("username", username);
@@ -72,7 +72,5 @@ public class LoginController {
         mav.addObject("users", userService.getAllUsers());
         return mav;
     }
-
-
-
 }
+
